@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Data from Excel File</title>
+
+    <!-- Include Ag-Grid styles -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.0/styles/ag-grid.css" />
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.0/styles/ag-theme-quartz.css" />
+    <!-- Include Ag-Grid scripts -->
+    <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+  </head>
+  <body>
+    <h2>Upload Excel File</h2>
+    <form
+      method="post"
+      enctype="multipart/form-data"
+      action="{% url 'extract_and_upload_to_mongodb' %}">
+      {% csrf_token %}
+      <input type="file" name="excel_file" />
+      <button type="submit">Submit</button>
+    </form>
+
+    {% if my_data %}
+    <h3>Data from Excel File</h3>
+    <div
+      id="agGrid"
+      style="height: 400px; width: 100%"
+      class="ag-theme-alpine"></div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        // Define the column definitions based on your data
+        var columnDefs = [
+          {% for key in my_data.0.keys %}
+            { headerName: '{{ key }}', field: '{{ key }}' },
+          {% endfor %}
+        ];
+
+        // Specify the data for the grid
+        var rowData = [
+          {% for record in my_data %}
+            {
+              {% for key, value in record.items %}
+                '{{ key }}': '{{ value }}',
+              {% endfor %}
+            },
+          {% endfor %}
+        ];
+
+        // Setup the grid
+        var gridOptions = {
+          columnDefs: columnDefs,
+          rowData: rowData,
+          domLayout: 'autoHeight',
+          defaultColDef: {
+            flex: 1,
+            minWidth: 100,
+            resizable: true,
+          },
+        };
+
+        // Create the Ag-Grid instance
+        new agGrid.Grid(document.querySelector('#agGrid'), gridOptions);
+      });
+    </script>
+    {% else %}
+    <p>No data available.</p>
+    {% endif %}
+  </body>
+</html>
